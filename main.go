@@ -67,7 +67,7 @@ func sendMessage(tgBot *TgBot, message string) {
 	log.Printf("消息发送成功 %v", success)
 }
 
-func StartTgBot() *TgBot {
+func NewTgBotInstance() *TgBot {
 	tgBot, err := NewTgBot(
 		getTokenConfig(),
 		getChatIdConfig(),
@@ -83,7 +83,7 @@ var tgBot *TgBot
 
 func main() {
 	// 初始化的机器人实例
-	tgBot = StartTgBot()
+	tgBot = NewTgBotInstance()
 	http.HandleFunc("/"+getWebHookSecretConfig(), requestHandle)
 	log.Printf("服务启动成功,监听端口:%v\n", getWebServerPort())
 	err := http.ListenAndServe(":"+getWebServerPort(), nil)
