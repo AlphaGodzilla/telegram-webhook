@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -79,13 +81,32 @@ func NewTgBotInstance() *TgBot {
 	return tgBot
 }
 
+func buildMessage(notification *Notification) string {
+	message := "==== Prometheus告警信息 ====\n"
+	for idx, alert := range notification.Alerts {
+		message += fmt.Sprintf("告警：#%v\n", idx)
+		if v, severityExist := alert.Labels["severity"]; severityExist {
+			message += fmt.Sprintf("等级：%v\n", v)
+		} else {
+			message += fmt.Sprintf("等级：%v\n", "unknown")
+		}
+		message += fmt.Sprintf("标题：%v\n", alert.Annotations["summary"])
+		message += fmt.Sprintf("描述：%v\n", alert.Annotations["description"])
+		message += fmt.Sprintf("等值：%v\n", alert.Annotations["value"])
+		message += fmt.Sprintf("开始时间：%v\n", alert.StartsAt)
+		message += "------------------------"
+	}
+	return message
+}
+
 var tgBot *TgBot
 
 func main() {
 	// 初始化的机器人实例
 	tgBot = NewTgBotInstance()
-	http.HandleFunc("/"+getWebHookSecretConfig(), requestHandle)
+	http.HandleFunc("/webhook/"+getWebHookSecretConfig(), requestHandle)
 	log.Printf("服务启动成功,监听端口:%v\n", getWebServerPort())
+	log.Printf("访问   :%v/webhook/%v", getWebServerPort(), getWebHookSecretConfig())
 	err := http.ListenAndServe(":"+getWebServerPort(), nil)
 	if err != nil {
 		return
@@ -98,7 +119,17 @@ func requestHandle(response http.ResponseWriter, request *http.Request) {
 		handleResponse(response, ioErr)
 		return
 	}
-	sendMessage(tgBot, string(data))
+	var notification Notification
+	jsonErr := json.Unmarshal(data, &notification)
+	if jsonErr != nil {
+		handleResponse(response, jsonErr)
+		return
+	}
+	// 渲染模板
+	message := buildMessage(&notification)
+	// 发送消息
+	//println(message)
+	sendMessage(tgBot, message)
 }
 
 func handleResponse(response http.ResponseWriter, err error) {
