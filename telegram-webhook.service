@@ -1,0 +1,17 @@
+[Unit]
+Description=Prometheus alertmanager telegrame webhook
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=/etc/prometheus/telegrame-webhook/environment
+ExecStart=telegram-webhook
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+
