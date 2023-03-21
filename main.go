@@ -16,7 +16,16 @@ const (
 	TG_BOT_CHAT_ID  = "TG_BOT_CHAT_ID"
 	TG_BOT_DEBUG    = "TG_BOT_DEBUG"
 	WEB_HOOK_SECRET = "WEB_HOOK_SECRET"
+	CLUSTER_NAME    = "CLUSTER_NAME"
 )
+
+func getClusterName() string {
+	name := os.Getenv(CLUSTER_NAME)
+	if name == "" {
+		name = "Default"
+	}
+	return name
+}
 
 func getTokenConfig() string {
 	token := os.Getenv(TG_BOT_TOKEN)
@@ -83,6 +92,7 @@ func NewTgBotInstance() *TgBot {
 
 func buildMessage(notification *Notification) string {
 	message := "==== Prometheus告警信息 ====\n"
+	message += fmt.Sprintf("环境：%v\n", getClusterName())
 	for idx, alert := range notification.Alerts {
 		message += fmt.Sprintf("告警：#%v\n", idx)
 		if v, severityExist := alert.Labels["severity"]; severityExist {
