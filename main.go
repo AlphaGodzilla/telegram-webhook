@@ -93,6 +93,7 @@ func NewTgBotInstance() *TgBot {
 func buildMessage(notification *Notification) string {
 	message := "==== Prometheus告警信息 ====\n"
 	message += fmt.Sprintf("环境：%v\n", getClusterName())
+	message += "===========================\n"
 	for idx, alert := range notification.Alerts {
 		message += fmt.Sprintf("告警：#%v\n", idx)
 		if v, severityExist := alert.Labels["severity"]; severityExist {
@@ -104,7 +105,7 @@ func buildMessage(notification *Notification) string {
 		message += fmt.Sprintf("描述：%v\n", alert.Annotations["description"])
 		message += fmt.Sprintf("等值：%v\n", alert.Annotations["value"])
 		message += fmt.Sprintf("开始时间：%v\n", alert.StartsAt)
-		message += "------------------------"
+		message += "------------------------\n"
 	}
 	return message
 }
